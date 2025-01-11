@@ -76,6 +76,27 @@ app.post(
   }
 );
 
+// Update books endpoint
+
+app.put(
+  "/api/books/:id",
+  authenticateToken,
+  authorizeRole("admin"),
+  (req, res) => {
+    const id = req.params.id;
+    const { title, author } = req.body;
+    // const bookIndex = books.indexOf((book)=>book.id === parseInt(id))
+
+    const bookIndex = books.findIndex((book) => book.id === parseInt(id));
+    if (bookIndex === -1) {
+      return res.status(404).json({ message: "Books with id not found" });
+    }
+    books[bookIndex].title = title;
+    books[bookIndex].author = author;
+    res.json(books[bookIndex]);
+  }
+);
+
 // Delete a book (only admin)
 
 app.delete(
@@ -85,8 +106,18 @@ app.delete(
   (req, res) => {
     const id = req.params.id;
 
-    const books = books.filter((book) => book.id !== parseInt(id));
-    res.status(200).json({ message: "Book deleted successfully" });
+    const filteredBooks = books.filter((book) => book.id !== parseInt(id));
+
+    if (filteredBooks.length === books.length) {
+      return res
+        .status(404)
+        .json({ message: "Books not found", status: false });
+    }
+
+    books = filteredBooks;
+    res
+      .status(200)
+      .json({ message: "Book deleted successfully", status: true });
   }
 );
 
